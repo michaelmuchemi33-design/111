@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test - Studio Code</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 40px;
+            background: #0F0F0F;
+            color: #E0E0E0;
+            line-height: 1.6;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #7DC870; margin-bottom: 20px; }
+        .section {
+            background: #161616;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(224, 224, 224, 0.1);
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success { background: rgba(125, 200, 112, 0.1); color: #7DC870; }
+        .error { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+        .info { background: rgba(96, 165, 250, 0.1); color: #60A5FA; }
+        button {
+            background: #7DC870;
+            color: #060608;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        button:hover { background: #9ADE8A; }
+        button:disabled {
+            background: #404040;
+            color: #787878;
+            cursor: not-allowed;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #1c1c1c;
+            border: 1px solid rgba(224, 224, 224, 0.1);
+            border-radius: 8px;
+            color: #E0E0E0;
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #C8C8C8;
+            font-size: 14px;
+        }
+        .code {
+            background: #0A0A0A;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Authentication System Test</h1>
+
+        <div class="section">
+            <h2>System Status</h2>
+            <div id="system-status" class="status info">Checking...</div>
+        </div>
+
+        <div class="section">
+            <h2>Current Session</h2>
+            <div id="session-status" class="status info">Loading...</div>
+            <button onclick="checkSession()">Check Session</button>
+            <button onclick="testProtection()">Test Dashboard Protection</button>
+        </div>
+
+        <div class="section">
+            <h2>Quick Sign Up</h2>
+            <label>Email</label>
+            <input type="email" id="signup-email" placeholder="test@example.com">
+            <label>Password</label>
+            <input type="password" id="signup-pass" placeholder="TestPass123!">
+            <label>First Name</label>
+            <input type="text" id="signup-first" placeholder="Test">
+            <label>Last Name</label>
+            <input type="text" id="signup-last" placeholder="User">
+            <button onclick="quickSignUp()">Create Account</button>
+        </div>
+
+        <div class="section">
+            <h2>Quick Sign In</h2>
+            <label>Email</label>
+            <input type="email" id="signin-email" placeholder="test@example.com">
+            <label>Password</label>
+            <input type="password" id="signin-pass" placeholder="TestPass123!">
+            <button onclick="quickSignIn()">Sign In</button>
+        </div>
+
+        <div class="section">
+            <h2>Actions</h2>
+            <button onclick="goToLanding()">Go to Landing Page</button>
+            <button onclick="goToDashboard()">Go to Dashboard</button>
+            <button onclick="testSignOut()">Sign Out</button>
+        </div>
+
+        <div class="section">
+            <h2>Database Test</h2>
+            <button onclick="checkProfile()">Check My Profile</button>
+            <button onclick="listAllProfiles()">List All Profiles (Admin)</button>
+            <div id="db-result" class="code" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>Console Logs</h2>
+            <div id="console-output" class="code"></div>
+        </div>
+    </div>
+
+    <script>
+        // Intercept console logs
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addLog(type, ...args) {
+            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : a).join(' ');
+            const time = new Date().toLocaleTimeString();
+            consoleOutput.innerHTML += `[${time}] ${type}: ${msg}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = (...args) => { originalLog(...args); addLog('LOG', ...args); };
+        console.error = (...args) => { originalError(...args); addLog('ERROR', ...args); };
+        console.warn = (...args) => { originalWarn(...args); addLog('WARN', ...args); };
+
+        // System check
+        async function checkSystem() {
+            const status = document.getElementById('system-status');
+            if (!window.sbClient) {
+                status.className = 'status error';
+                status.textContent = '❌ Supabase client not initialized';
+                return;
+            }
+            status.className = 'status success';
+            status.textContent = '✅ Supabase client initialized and ready';
+            checkSession();
+        }
+
+        async function checkSession() {
+            const status = document.getElementById('session-status');
+            if (!window.sbClient) {
+                status.className = 'status error';
+                status.textContent = '❌ No client available';
+                return;
+            }
+
+            const { data: { session }, error } = await window.sbClient.auth.getSession();
+
+            if (error) {
+                status.className = 'status error';
+                status.textContent = `❌ Error: ${error.message}`;
+                return;
+            }
+
+            if (!session) {
+                status.className = 'status info';
+                status.textContent = '🔓 No active session - User is NOT logged in';
+                return;
+            }
+
+            status.className = 'status success';
+            status.textContent = `✅ Logged in as: ${session.user.email}\nUser ID: ${session.user.id}`;
+        }
+
+        async function quickSignUp() {
+            const email = document.getElementById('signup-email').value;
+            const pass = document.getElementById('signup-pass').value;
+            const first = document.getElementById('signup-first').value;
+            const last = document.getElementById('signup-last').value;
+
+            if (!email || !pass || !first) {
+                alert('Please fill in email, password, and first name');
+                return;
+            }
+
+            console.log('🔐 Attempting sign up...');
+            const { data, error } = await window.sbClient.auth.signUp({
+                email,
+                password: pass,
+                options: {
+                    data: { first_name: first, last_name: last }
+                }
+            });
+
+            if (error) {
+                console.error('Sign up failed:', error.message);
+                alert('Sign up failed: ' + error.message);
+            } else {
+                console.log('✅ Sign up successful!', data);
+                alert('Account created! Check session status.');
+                checkSession();
+            }
+        }
+
+        async function quickSignIn() {
+            const email = document.getElementById('signin-email').value;
+            const pass = document.getElementById('signin-pass').value;
+
+            if (!email || !pass) {
+                alert('Please enter email and password');
+                return;
+            }
+
+            console.log('🔐 Attempting sign in...');
+            const { data, error } = await window.sbClient.auth.signInWithPassword({
+                email,
+                password: pass
+            });
+
+            if (error) {
+                console.error('Sign in failed:', error.message);
+                alert('Sign in failed: ' + error.message);
+            } else {
+                console.log('✅ Sign in successful!', data);
+                alert('Signed in! Check session status.');
+                checkSession();
+            }
+        }
+
+        async function testSignOut() {
+            console.log('🔓 Signing out...');
+            const { error } = await window.sbClient.auth.signOut();
+            if (error) {
+                console.error('Sign out failed:', error.message);
+            } else {
+                console.log('✅ Signed out successfully');
+                checkSession();
+            }
+        }
+
+        function goToLanding() {
+            window.location.href = 'landing_page.html';
+        }
+
+        function goToDashboard() {
+            window.location.href = 'client_dashboard.html';
+        }
+
+        async function testProtection() {
+            console.log('🛡️ Testing dashboard protection...');
+            if (typeof protectDashboard === 'function') {
+                await protectDashboard();
+            } else {
+                console.error('protectDashboard function not found');
+            }
+        }
+
+        async function checkProfile() {
+            const result = document.getElementById('db-result');
+            const { data: { session } } = await window.sbClient.auth.getSession();
+
+            if (!session) {
+                result.style.display = 'block';
+                result.textContent = 'Error: Not logged in';
+                return;
+            }
+
+            const { data, error } = await window.sbClient
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            result.style.display = 'block';
+            if (error) {
+                result.textContent = `Error: ${error.message}`;
+            } else {
+                result.textContent = JSON.stringify(data, null, 2);
+            }
+        }
+
+        async function listAllProfiles() {
+            const result = document.getElementById('db-result');
+            const { data, error } = await window.sbClient
+                .from('profiles')
+                .select('*');
+
+            result.style.display = 'block';
+            if (error) {
+                result.textContent = `Error: ${error.message}\n\nNote: This will fail if RLS is enabled and you're not an admin.`;
+            } else {
+                result.textContent = JSON.stringify(data, null, 2);
+            }
+        }
+
+        // Run system check on load
+        window.addEventListener('DOMContentLoaded', checkSystem);
+    </script>
+</body>
+</html>

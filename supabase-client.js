@@ -63,23 +63,48 @@ async function handleAuthRedirect(session) {
 
 // Global function to protect dashboard pages
 async function protectDashboard() {
-  if (!window.sbClient) return;
+  if (!window.sbClient) {
+    _L.error("Supabase client not initialized for dashboard protection");
+    return;
+  }
 
-  const { data: { session }, error } = await window.sbClient.auth.getSession();
-  if (error || !session) {
-    // If not authenticated and not on landing page, redirect to landing page
-    const currentPage = window.location.pathname.split('/').pop();
-    if (currentPage !== 'landing_page.html' && currentPage !== '') {
+  _L.debug("Protecting dashboard...");
+
+  try {
+    const { data: { session }, error } = await window.sbClient.auth.getSession();
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+
+    if (error) {
+      _L.error("Session error:", error);
+      _L.info("Redirecting to landing page due to session error");
       window.location.href = 'landing_page.html';
+      return;
     }
-  } else {
-    // Make sure the user is allowed to access this dashboard
-    const dashboard = await getDashboardForRole(session);
-    const currentPage = window.location.pathname.split('/').pop();
-    if (currentPage !== dashboard && currentPage !== 'landing_page.html' && currentPage !== '') {
-      // If trying to access a different dashboard without permission
-      window.location.href = dashboard;
+
+    if (!session || !session.user) {
+      _L.warn("No active session found. User must sign in.");
+      _L.info(`Redirecting unauthenticated user from ${currentPage} to landing page`);
+      window.location.href = 'landing_page.html';
+      return;
     }
+
+    _L.info("User authenticated, verifying dashboard access...", { email: session.user.email });
+
+    const expectedDashboard = await getDashboardForRole(session);
+
+    _L.debug(`Current page: ${currentPage}, Expected: ${expectedDashboard}`);
+
+    if (currentPage !== expectedDashboard) {
+      _L.warn(`User on wrong dashboard. Redirecting from ${currentPage} to ${expectedDashboard}`);
+      window.location.href = expectedDashboard;
+      return;
+    }
+
+    _L.info(`Dashboard access verified for ${currentPage}`);
+    if (window.hideLoader) window.hideLoader();
+  } catch (err) {
+    _L.error("Dashboard protection error:", err);
+    window.location.href = 'landing_page.html';
   }
 }
 
