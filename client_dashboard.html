@@ -1,0 +1,2583 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Dashboard — EscrowMKT</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link href="https://unpkg.com/aos@next/dist/aos.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script>
+    if (window.protectDashboard) protectDashboard();
+  </script>
+  <style>
+    /* ══════════════════════════════════════════════
+   THEME SYSTEM — dark is default
+══════════════════════════════════════════════ */
+    :root {
+      /* DARK (default) */
+      --bg-page: #0A0A0A;
+      --bg-sidebar: #000000;
+      --bg-card: #111111;
+      --bg-inset: #1A1A1A;
+      --bg-hover: #242424;
+      --bg-btn: #2E2E2E;
+
+      --text-1: #FFFFFF;
+      --text-2: #E4E4E4;
+      --text-3: #C0C0C0;
+      --text-4: #909090;
+      --text-5: #606060;
+      --text-6: #3A3A3A;
+
+      --border-0: rgba(255, 255, 255, 0.04);
+      --border-1: rgba(255, 255, 255, 0.08);
+      --border-2: rgba(255, 255, 255, 0.14);
+      --border-3: rgba(255, 255, 255, 0.26);
+
+      --green: #22C55E;
+      --gbg: rgba(34, 197, 94, .09);
+      --gbdr: rgba(34, 197, 94, .22);
+      --amber: #EAB308;
+      --abg: rgba(234, 179, 8, .09);
+      --abdr: rgba(234, 179, 8, .22);
+      --red: #EF4444;
+      --rbg: rgba(239, 68, 68, .09);
+      --rbdr: rgba(239, 68, 68, .22);
+      --blue: #60A5FA;
+      --bbg: rgba(96, 165, 250, .09);
+      --bbdr: rgba(96, 165, 250, .22);
+
+      --r4: 4px;
+      --r8: 8px;
+      --r12: 12px;
+      --r16: 16px;
+      --r20: 20px;
+      --rpill: 9999px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .5);
+    }
+
+    [data-theme="light"] {
+      --bg-page: #F5F5F5;
+      --bg-sidebar: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-inset: #F0F0F0;
+      --bg-hover: #E8E8E8;
+      --bg-btn: #E0E0E0;
+
+      --text-1: #0A0A0A;
+      --text-2: #1A1A1A;
+      --text-3: #3A3A3A;
+      --text-4: #606060;
+      --text-5: #909090;
+      --text-6: #C0C0C0;
+
+      --border-0: rgba(0, 0, 0, 0.05);
+      --border-1: rgba(0, 0, 0, 0.09);
+      --border-2: rgba(0, 0, 0, 0.15);
+      --border-3: rgba(0, 0, 0, 0.25);
+
+      --green: #16A34A;
+      --gbg: rgba(22, 163, 74, .08);
+      --gbdr: rgba(22, 163, 74, .2);
+      --amber: #B45309;
+      --abg: rgba(180, 83, 9, .08);
+      --abdr: rgba(180, 83, 9, .2);
+      --red: #DC2626;
+      --rbg: rgba(220, 38, 38, .08);
+      --rbdr: rgba(220, 38, 38, .2);
+      --blue: #2563EB;
+      --bbg: rgba(37, 99, 235, .08);
+      --bbdr: rgba(37, 99, 235, .2);
+      --shadow: 0 1px 4px rgba(0, 0, 0, .1);
+    }
+
+    /* ══════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-2);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+      transition: background .2s, color .2s;
+    }
+
+    ::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-btn);
+      border-radius: var(--rpill);
+    }
+
+    /* ══════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════ */
+    .sidebar {
+      width: 230px;
+      min-width: 230px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-1);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 11px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+      transition: background .2s, border-color .2s;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 3px 6px;
+      margin-bottom: 20px;
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      background: var(--text-1);
+      color: var(--bg-sidebar);
+      border-radius: var(--r8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      flex-shrink: 0;
+      transition: background .2s, color .2s;
+    }
+
+    .logo-name {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: var(--text-1);
+    }
+
+    .logo-name em {
+      font-style: normal;
+      color: var(--text-5);
+    }
+
+    /* Avatar */
+    .sb-user {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 9px;
+      border-radius: var(--r8);
+      border: 1px solid var(--border-1);
+      background: var(--bg-inset);
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: border-color .15s, background .2s;
+    }
+
+    .sb-user:hover {
+      border-color: var(--border-2);
+    }
+
+    .av {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r8);
+      flex-shrink: 0;
+      overflow: hidden;
+      background: var(--bg-hover);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-3);
+      border: 1px solid var(--border-1);
+      position: relative;
+    }
+
+    .av img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .av-lg {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r12);
+      font-size: 14px;
+    }
+
+    .sb-uname {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-1);
+    }
+
+    .sb-urole {
+      font-size: 9.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-5);
+      margin-top: 1px;
+    }
+
+    /* Nav */
+    .nav-sec {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: var(--text-6);
+      padding: 0 7px;
+      margin: 12px 0 4px;
+    }
+
+    .ni {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6.5px 8px;
+      border-radius: var(--r8);
+      color: var(--text-5);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      border: 1px solid transparent;
+      margin-bottom: 1px;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .ni:hover {
+      color: var(--text-2);
+      background: var(--bg-inset);
+    }
+
+    .ni.active {
+      color: var(--text-1);
+      background: var(--bg-inset);
+      border-color: var(--border-1);
+    }
+
+    .ni svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    .nc {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--text-5);
+      background: var(--bg-hover);
+      padding: 1px 6px;
+      border-radius: var(--rpill);
+      border: 1px solid var(--border-0);
+    }
+
+    /* Sidebar footer */
+    .sb-foot {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-0);
+    }
+
+    /* Theme toggle */
+    .theme-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6.5px 8px;
+      border-radius: var(--r8);
+      color: var(--text-5);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      background: none;
+      border: 1px solid transparent;
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+      margin-bottom: 3px;
+    }
+
+    .theme-btn:hover {
+      color: var(--text-2);
+      background: var(--bg-inset);
+    }
+
+    .theme-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* theme toggle pill */
+    .theme-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: var(--r8);
+      background: var(--bg-inset);
+      border: 1px solid var(--border-1);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .theme-pill:hover {
+      border-color: var(--border-2);
+    }
+
+    .theme-pill-lbl {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-3);
+    }
+
+    .theme-switch {
+      width: 36px;
+      height: 20px;
+      border-radius: var(--rpill);
+      background: var(--bg-btn);
+      border: 1px solid var(--border-2);
+      position: relative;
+      transition: background .2s;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .theme-switch.on {
+      background: var(--text-1);
+    }
+
+    .theme-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      transition: all .2s;
+    }
+
+    .theme-switch.on::after {
+      left: 18px;
+      background: var(--bg-sidebar);
+    }
+
+    .so-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6.5px 8px;
+      border-radius: var(--r8);
+      color: var(--text-5);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      width: 100%;
+    }
+
+    .so-btn:hover {
+      color: var(--red);
+      background: var(--rbg);
+    }
+
+    /* ══════════════════════════════════════════════
+   MAIN AREA
+══════════════════════════════════════════════ */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 26px;
+      border-bottom: 1px solid var(--border-0);
+      background: var(--bg-page);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      transition: background .2s, border-color .2s;
+    }
+
+    .pg-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: var(--text-1);
+    }
+
+    .pg-sub {
+      font-size: 11px;
+      color: var(--text-5);
+      margin-top: 1px;
+    }
+
+    .tb-right {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* Connection indicator */
+    .db-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--rpill);
+      font-size: 10.5px;
+      font-weight: 600;
+      background: var(--gbg);
+      border: 1px solid var(--gbdr);
+      color: var(--green);
+      cursor: default;
+    }
+
+    .db-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    /* PAGES — only active shows */
+    .page {
+      display: none;
+      padding: 22px 26px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* ══════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: var(--r8);
+      cursor: pointer;
+      transition: all .15s;
+      border: none;
+      white-space: nowrap;
+    }
+
+    .btn-w {
+      background: var(--text-1);
+      color: var(--bg-sidebar);
+    }
+
+    .btn-w:hover {
+      opacity: .88;
+    }
+
+    .btn-g {
+      background: transparent;
+      border: 1px solid var(--border-2);
+      color: var(--text-3);
+    }
+
+    .btn-g:hover {
+      border-color: var(--border-3);
+      color: var(--text-1);
+      background: var(--bg-inset);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 11.5px;
+    }
+
+    /* ══════════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════════ */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-1);
+      border-radius: var(--r16);
+      padding: 18px;
+      transition: border-color .2s, background .2s;
+      box-shadow: var(--shadow);
+    }
+
+    .card:hover {
+      border-color: var(--border-2);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-2);
+      letter-spacing: -.01em;
+    }
+
+    .card-lnk {
+      font-size: 11.5px;
+      color: var(--text-5);
+      cursor: pointer;
+      transition: color .15s;
+    }
+
+    .card-lnk:hover {
+      color: var(--text-1);
+    }
+
+    /* Stat cards */
+    .sc {
+      background: var(--bg-card);
+      border: 1px solid var(--border-1);
+      border-radius: var(--r16);
+      padding: 16px 18px;
+      transition: all .2s;
+      cursor: default;
+      box-shadow: var(--shadow);
+    }
+
+    .sc:hover {
+      border-color: var(--border-2);
+      background: var(--bg-inset);
+    }
+
+    .sc-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--r8);
+      background: var(--bg-inset);
+      border: 1px solid var(--border-1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      margin-bottom: 11px;
+    }
+
+    .sc-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-1);
+      letter-spacing: -.03em;
+      margin-bottom: 2px;
+    }
+
+    .sc-lbl {
+      font-size: 11px;
+      color: var(--text-5);
+      font-weight: 500;
+    }
+
+    .sc-d {
+      font-size: 11px;
+      margin-top: 5px;
+    }
+
+    .up {
+      color: var(--green);
+    }
+
+    .dn {
+      color: var(--red);
+    }
+
+    .neu {
+      color: var(--text-5);
+    }
+
+    /* ══════════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════════ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--rpill);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .b-g {
+      background: var(--gbg);
+      color: var(--green);
+      border: 1px solid var(--gbdr);
+    }
+
+    .b-a {
+      background: var(--abg);
+      color: var(--amber);
+      border: 1px solid var(--abdr);
+    }
+
+    .b-r {
+      background: var(--rbg);
+      color: var(--red);
+      border: 1px solid var(--rbdr);
+    }
+
+    .b-b {
+      background: var(--bbg);
+      color: var(--blue);
+      border: 1px solid var(--bbdr);
+    }
+
+    .b-w {
+      background: var(--bg-hover);
+      color: var(--text-2);
+      border: 1px solid var(--border-1);
+    }
+
+    /* ══════════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════════ */
+    .tbl {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tbl th {
+      text-align: left;
+      padding: 0 10px 8px;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-6);
+      border-bottom: 1px solid var(--border-1);
+    }
+
+    .tbl td {
+      padding: 9px 10px;
+      font-size: 12.5px;
+      border-bottom: 1px solid var(--border-0);
+      vertical-align: middle;
+      color: var(--text-2);
+    }
+
+    .tbl tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tbl tr:hover td {
+      background: var(--bg-inset);
+    }
+
+    /* ══════════════════════════════════════════════
+   PROGRESS
+══════════════════════════════════════════════ */
+    .pbg {
+      background: var(--bg-hover);
+      border-radius: var(--rpill);
+      height: 3px;
+      overflow: hidden;
+    }
+
+    .pf {
+      height: 100%;
+      border-radius: var(--rpill);
+      background: var(--text-1);
+      transition: width .8s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .pf-g {
+      background: var(--green);
+    }
+
+    .pf-a {
+      background: var(--amber);
+    }
+
+    /* ══════════════════════════════════════════════
+   MISC
+══════════════════════════════════════════════ */
+    .sl {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-6);
+      margin-bottom: 11px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sl::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-0);
+    }
+
+    .mono {
+      font-family: 'DM Mono', monospace;
+    }
+
+    .div {
+      height: 1px;
+      background: var(--border-0);
+      margin: 12px 0;
+    }
+
+    .g4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 11px;
+      margin-bottom: 18px;
+    }
+
+    .g2l {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 13px;
+      margin-bottom: 18px;
+    }
+
+    .g2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 13px;
+      margin-bottom: 18px;
+    }
+
+    .g2b {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* milestone tracker */
+    .ms-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+    }
+
+    .ms-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 14px;
+      flex-shrink: 0;
+      padding-top: 1px;
+    }
+
+    .ms-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 2px solid var(--border-2);
+      background: var(--bg-inset);
+      flex-shrink: 0;
+    }
+
+    .ms-dot.done {
+      background: var(--green);
+      border-color: var(--gbdr);
+    }
+
+    .ms-dot.cur {
+      background: var(--text-1);
+      border-color: var(--text-1);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, .1);
+    }
+
+    .ms-dot.locked {
+      background: var(--bg-inset);
+      border-color: var(--border-1);
+    }
+
+    .ms-line {
+      width: 1px;
+      flex: 1;
+      min-height: 18px;
+      background: var(--border-1);
+      margin: 3px 0;
+    }
+
+    .ms-line.done {
+      background: var(--gbdr);
+    }
+
+    .ms-body {
+      padding-bottom: 14px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ms-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-3);
+    }
+
+    .ms-title.done {
+      color: var(--green);
+    }
+
+    .ms-title.cur {
+      color: var(--text-1);
+    }
+
+    .ms-title.locked {
+      color: var(--text-6);
+    }
+
+    .ms-sub {
+      font-size: 11px;
+      color: var(--text-5);
+      margin-top: 1px;
+    }
+
+    /* project row in cards */
+    .proj-row {
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border-0);
+    }
+
+    .proj-row:last-child {
+      border-bottom: none;
+    }
+
+    /* ring chart */
+    .ring-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 4px 0 12px;
+    }
+
+    .ring-chart {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+    }
+
+    .ring-chart svg {
+      transform: rotate(-90deg);
+    }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-1);
+    }
+
+    .ring-lbl {
+      font-size: 9px;
+      color: var(--text-5);
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex: 1;
+    }
+
+    .leg {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+    }
+
+    .leg-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .leg-lbl {
+      color: var(--text-4);
+      flex: 1;
+    }
+
+    .leg-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    /* transaction */
+    .tx {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-0);
+    }
+
+    .tx:last-child {
+      border-bottom: none;
+    }
+
+    .tx-ico {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--r8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .tx-info {
+      flex: 1;
+    }
+
+    .tx-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .tx-date {
+      font-size: 11px;
+      color: var(--text-5);
+      margin-top: 1px;
+    }
+
+    .tx-amt {
+      font-family: 'DM Mono', monospace;
+      font-size: 12.5px;
+      font-weight: 500;
+    }
+
+    /* messages */
+    .msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 9px 6px;
+      cursor: pointer;
+      border-radius: var(--r8);
+      border-bottom: 1px solid var(--border-0);
+      transition: background .15s;
+    }
+
+    .msg:last-child {
+      border-bottom: none;
+    }
+
+    .msg:hover {
+      background: var(--bg-inset);
+    }
+
+    .msg-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .msg-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .msg-sender {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+
+    .msg-time {
+      font-size: 10px;
+      color: var(--text-6);
+    }
+
+    .msg-prev {
+      font-size: 11.5px;
+      color: var(--text-5);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .unread-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-1);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    /* dev list */
+    .dev-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 9px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border-1);
+      border-radius: var(--r12);
+      margin-bottom: 6px;
+      transition: border-color .15s;
+    }
+
+    .dev-row:hover {
+      border-color: var(--border-2);
+    }
+
+    .dev-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .dev-info {
+      flex: 1;
+    }
+
+    .dev-name {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+
+    .dev-spec {
+      font-size: 11px;
+      color: var(--text-5);
+      margin-top: 1px;
+    }
+
+    .online {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    .away {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--amber);
+    }
+
+    .offline {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-6);
+    }
+
+    /* quick actions */
+    .qa {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border-1);
+      border-radius: var(--r12);
+      padding: 11px;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: left;
+      width: 100%;
+    }
+
+    .qa:hover {
+      border-color: var(--border-2);
+      background: var(--bg-hover);
+    }
+
+    .qa-ico {
+      font-size: 16px;
+    }
+
+    .qa-lbl {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+
+    .qa-desc {
+      font-size: 10.5px;
+      color: var(--text-5);
+    }
+
+    /* notification item */
+    .notif {
+      display: flex;
+      gap: 9px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-0);
+    }
+
+    .notif:last-child {
+      border-bottom: none;
+    }
+
+    .notif-ico {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--r8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+      background: var(--bg-inset);
+    }
+
+    .notif-body {
+      flex: 1;
+    }
+
+    .notif-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .notif-sub {
+      font-size: 11px;
+      color: var(--text-5);
+      margin-top: 1px;
+    }
+
+    .notif-time {
+      font-size: 10px;
+      color: var(--text-6);
+      margin-top: 3px;
+    }
+
+    /* billing */
+    .plan-card {
+      background: var(--bg-inset);
+      border: 1px solid var(--border-2);
+      border-radius: var(--r12);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .plan-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-1);
+      margin-bottom: 3px;
+    }
+
+    .plan-price {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text-1);
+    }
+
+    .plan-sub {
+      font-size: 11px;
+      color: var(--text-5);
+      margin-top: 2px;
+    }
+
+    /* input */
+    .input {
+      background: var(--bg-inset);
+      border: 1px solid var(--border-1);
+      color: var(--text-1);
+      border-radius: var(--r8);
+      padding: 8px 11px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      width: 100%;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .input:focus {
+      border-color: var(--border-3);
+    }
+
+    .input::placeholder {
+      color: var(--text-6);
+    }
+
+    .input-lbl {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text-5);
+      margin-bottom: 4px;
+    }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      background: var(--text-1);
+      color: var(--bg-sidebar);
+      padding: 9px 16px;
+      border-radius: var(--r8);
+      font-size: 12.5px;
+      font-weight: 700;
+      z-index: 9999;
+      animation: fadeUp .25s ease;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .fu {
+      animation: fadeUp .28s ease both;
+    }
+
+    .d1 {
+      animation-delay: .04s
+    }
+
+    .d2 {
+      animation-delay: .08s
+    }
+
+    .d3 {
+      animation-delay: .12s
+    }
+
+    .d4 {
+      animation-delay: .16s
+    }
+
+    /* loading state */
+    .skeleton {
+      background: var(--bg-hover);
+      border-radius: var(--r8);
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        opacity: .6
+      }
+
+      50% {
+        opacity: 1
+      }
+
+      100% {
+        opacity: .6
+      }
+    }
+
+    .loading-text {
+      font-size: 12px;
+      color: var(--text-5);
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* ── Enhanced profile avatar ── */
+    .av {
+      position: relative;
+      border-radius: var(--r8);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+      color: var(--text-1);
+      background: var(--bg-inset);
+      flex-shrink: 0;
+      border: 2px solid var(--border-1);
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .av img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+
+    .sb-user {
+      border-radius: var(--r12);
+      transition: background .15s, border-color .15s;
+    }
+
+    .sb-user:hover .av {
+      border-color: var(--border-2);
+      box-shadow: 0 0 0 3px var(--gbg, rgba(34, 197, 94, .08));
+    }
+
+    /* Status dot on avatar */
+    .av-wrap {
+      position: relative;
+      display: inline-flex;
+      flex-shrink: 0;
+    }
+
+    .av-online {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid var(--bg-sidebar, var(--bg-page));
+      z-index: 2;
+    }
+
+    /* ═══════════════════════════════════════════════════
+   UNIVERSAL SIDEBAR — retractable on ALL screen sizes
+═══════════════════════════════════════════════════ */
+
+    /* Backdrop for mobile/tablet overlay */
+    .sb-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 199;
+      opacity: 0;
+      transition: opacity .3s ease;
+      pointer-events: none;
+    }
+
+    .sb-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Sidebar base ── */
+    .sidebar {
+      transition: width .3s cubic-bezier(.25, .46, .45, .94),
+        transform .3s cubic-bezier(.25, .46, .45, .94),
+        padding .3s ease,
+        background .2s, border-color .2s;
+      will-change: transform;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 100;
+    }
+
+    /* ── Sidebar COLLAPSED on desktop ── */
+    body.sb-collapsed .sidebar {
+      width: 58px !important;
+      min-width: 58px !important;
+      overflow: hidden;
+    }
+
+    body.sb-collapsed .sidebar .sb-uname,
+    body.sb-collapsed .sidebar .sb-urole,
+    body.sb-collapsed .sidebar .nav-sec,
+    body.sb-collapsed .sidebar .logo-name {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: opacity .2s, width .2s;
+    }
+
+    body.sb-collapsed .sidebar .logo-name {
+      display: none;
+    }
+
+    body.sb-collapsed .sidebar .ni span,
+    body.sb-collapsed .sidebar .ni em {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    body.sb-collapsed .sidebar .ni {
+      justify-content: center;
+      padding: 10px 0;
+    }
+
+    body.sb-collapsed .sidebar .ni svg {
+      margin: 0;
+    }
+
+    body.sb-collapsed .sidebar .avail-label,
+    body.sb-collapsed .sidebar .avail-toggle-label {
+      display: none;
+    }
+
+    body.sb-collapsed .sidebar .sb-user {
+      justify-content: center;
+      padding: 8px 0;
+    }
+
+    body.sb-collapsed .sidebar .sb-user .av-wrap,
+    body.sb-collapsed .sidebar .sb-user>div:last-child {
+      /* hide text column, keep avatar */
+    }
+
+    body.sb-collapsed .sidebar .sb-user>div:last-child {
+      display: none;
+    }
+
+    body.sb-collapsed .sidebar .logo {
+      justify-content: center;
+      padding: 3px 0;
+    }
+
+    /* ── Toggle button (always visible in topbar) ── */
+    .sb-toggle {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border-1, var(--bd1));
+      border-radius: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .15s, border-color .15s;
+      padding: 0;
+    }
+
+    .sb-toggle:hover {
+      background: var(--bg-inset, var(--b3));
+      border-color: var(--border-2, var(--bd2));
+    }
+
+    .sb-toggle-bar {
+      width: 14px;
+      height: 1.5px;
+      background: var(--text-2, var(--s2));
+      border-radius: 2px;
+      transition: transform .25s, opacity .25s, width .25s;
+      flex-shrink: 0;
+    }
+
+    /* Animate to X when open on mobile */
+    .sb-toggle.is-open .sb-toggle-bar:nth-child(1) {
+      transform: translateY(5.5px) rotate(45deg);
+    }
+
+    .sb-toggle.is-open .sb-toggle-bar:nth-child(2) {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+
+    .sb-toggle.is-open .sb-toggle-bar:nth-child(3) {
+      transform: translateY(-5.5px) rotate(-45deg);
+    }
+
+    /* ── MOBILE (≤900px) — full overlay slide-in ── */
+    @media(max-width:900px) {
+      .sidebar {
+        position: fixed !important;
+        left: 0;
+        top: 0;
+        height: 100vh !important;
+        width: 230px !important;
+        min-width: 230px !important;
+        transform: translateX(-100%);
+        z-index: 200;
+        box-shadow: 6px 0 40px rgba(0, 0, 0, .25);
+      }
+
+      .sidebar.mob-open {
+        transform: translateX(0) !important;
+      }
+
+      .sb-backdrop {
+        display: block;
+      }
+
+      .main {
+        width: 100% !important;
+      }
+
+      .page,
+      .content {
+        padding: 14px 14px !important;
+      }
+
+      .topbar {
+        padding: 11px 16px !important;
+      }
+
+      /* Collapse classes don't apply on mobile */
+      body.sb-collapsed .sidebar {
+        width: 230px !important;
+        min-width: 230px !important;
+      }
+
+      body.sb-collapsed .sidebar .sb-uname,
+      body.sb-collapsed .sidebar .sb-urole,
+      body.sb-collapsed .sidebar .nav-sec,
+      body.sb-collapsed .sidebar .logo-name,
+      body.sb-collapsed .sidebar .ni span,
+      body.sb-collapsed .sidebar .ni em {
+        opacity: 1;
+        width: auto;
+      }
+
+      body.sb-collapsed .sidebar .logo-name {
+        display: block;
+      }
+
+      body.sb-collapsed .sidebar .ni {
+        justify-content: flex-start;
+        padding: 10px 9px;
+      }
+
+      body.sb-collapsed .sidebar .ni svg {
+        margin: 0;
+      }
+
+      body.sb-collapsed .sidebar .sb-user {
+        justify-content: flex-start;
+        padding: 8px 9px;
+      }
+
+      body.sb-collapsed .sidebar .sb-user>div:last-child {
+        display: block;
+      }
+
+      body.sb-collapsed .sidebar .logo {
+        justify-content: flex-start;
+        padding: 3px 6px;
+      }
+
+      /* Stat grids */
+      .stats-row,
+      .sc-row,
+      .sc-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+      }
+
+      .cards-grid,
+      .feat-grid,
+      .dp-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+      }
+
+      .tbl-wrap,
+      .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .tbl,
+      .data-table {
+        min-width: 580px;
+      }
+    }
+
+    /* ── Small phone ≤500px ── */
+    @media(max-width:500px) {
+
+      .stats-row,
+      .sc-row,
+      .sc-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .cards-grid,
+      .feat-grid,
+      .dp-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .page,
+      .content {
+        padding: 10px 10px !important;
+      }
+  </style>
+
+  <!-- SUPABASE INJECTION -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script>protectDashboard();
+  </script>
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">E</div>
+      <div class="logo-name">Escrow<em>MKT</em></div>
+    </div>
+    <div class="sb-user" onclick="showPage('profile')">
+      <div class="av-wrap">
+        <div class="av av-lg" id="sb-av"><img id="sb-av-img"
+            src="https://api.dicebear.com/8.x/thumbs/svg?seed=RyanNguyen&backgroundColor=222222" alt=""
+            onerror="this.style.display='none'"><span id="sb-initials">RN</span></div>
+        <div class="av-online"></div>
+      </div>
+      <div>
+        <div class="sb-uname" id="sb-name">Ryan Nguyen</div>
+        <div class="sb-urole">Client</div>
+      </div>
+    </div>
+    <!-- NAV -->
+    <div class="nav-sec">Overview</div><a class="ni active" data-page="dashboard" onclick="showPage('dashboard')"><svg
+        viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>Dashboard </a><a class="ni" data-page="projects" onclick="showPage('projects')"><svg viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+      </svg>My Projects <span class="nc" id="nav-proj-count">3</span></a><a class="ni" data-page="escrow"
+      onclick="showPage('escrow')"><svg viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>Escrow Funds </a>
+    <div class="nav-sec">Communicate</div><a class="ni" data-page="messages" onclick="showPage('messages')"><svg
+        viewBox="0 0 24 24">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>Messages <span class="nc" id="nav-msg-count">4</span></a><a class="ni" data-page="notifications"
+      onclick="showPage('notifications')"><svg viewBox="0 0 24 24">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>Notifications <span class="nc" id="nav-notif-count">2</span></a>
+    <div class="nav-sec">Account</div><a class="ni" data-page="billing" onclick="showPage('billing')"><svg
+        viewBox="0 0 24 24">
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <line x1="2" y1="10" x2="22" y2="10" />
+      </svg>Billing </a><a class="ni" data-page="profile" onclick="showPage('profile')"><svg viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M6 20v-2a6 6 0 0 1 12 0v2" />
+      </svg>Profile Settings </a>
+    <div class="sb-foot">
+      <!-- Theme toggle -->
+      <div class="theme-pill" onclick="toggleTheme()"><span class="theme-pill-lbl" id="theme-lbl">🌙 Dark
+          Mode</span>
+        <div class="theme-switch" id="theme-sw"></div>
+      </div><button class="so-btn" onclick="signOut()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" width="14" height="14">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>Sign Out </button>
+    </div>
+  </aside>
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="pg-title" id="topbar-title">Welcome back,
+          Ryan 👋</div>
+        <div class="pg-sub" id="topbar-sub">Here's your project summary</div>
+      </div>
+      <div class="tb-right">
+        <div class="db-status" id="db-status">
+          <div class="db-dot"></div><span id="db-status-text">Connecting…</span>
+        </div><button class="btn btn-g" onclick="showPage('projects')">View Projects</button><button class="btn btn-w"
+          onclick="showModal('new-project')"><svg width="11" height="11" fill="none" stroke="currentColor"
+            stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>New Project </button>
+      </div>
+    </div>
+    <!-- ═══ PAGE: DASHBOARD ═══ -->
+    <div id="page-dashboard" class="page active">
+      <div class="sl fu d1">Overview</div>
+      <div class="g4 fu d1">
+        <div class="sc">
+          <div class="sc-icon">💼</div>
+          <div class="sc-val" id="s-escrow">KSh 22,
+            000</div>
+          <div class="sc-lbl">Total Escrow Value</div>
+          <div class="sc-d up">▲ Active & secured</div>
+        </div>
+        <div class="sc">
+          <div class="sc-icon">✅</div>
+          <div class="sc-val" id="s-proj">3</div>
+          <div class="sc-lbl">Active Projects</div>
+          <div class="sc-d neu">2 in progress · 1 review</div>
+        </div>
+        <div class="sc">
+          <div class="sc-icon">📋</div>
+          <div class="sc-val" id="s-ms">8/15</div>
+          <div class="sc-lbl">Milestones Done</div>
+          <div class="sc-d up">▲ 53% overall</div>
+        </div>
+        <div class="sc">
+          <div class="sc-icon">💬</div>
+          <div class="sc-val" id="s-msg">4</div>
+          <div class="sc-lbl">Unread Messages</div>
+          <div class="sc-d neu">From 2 developers</div>
+        </div>
+      </div>
+      <div class="sl fu d2">Active Projects</div>
+      <div class="g2l fu d2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">My Projects</div><span class="card-lnk" onclick="showPage('projects')">View
+              All →</span>
+          </div>
+          <div id="dash-projects">
+            <div class="loading-text">Loading projects…</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Milestone Tracker</div><span class="badge b-g">Active</span>
+          </div>
+          <div id="dash-milestones">
+            <div class="ms-row">
+              <div class="ms-col">
+                <div class="ms-dot done"></div>
+                <div class="ms-line done"></div>
+              </div>
+              <div class="ms-body">
+                <div class="ms-title done">✓ Discovery & Wireframes</div>
+                <div class="ms-sub">Jan 28 · KSh 1,
+                  500 released</div>
+              </div>
+            </div>
+            <div class="ms-row">
+              <div class="ms-col">
+                <div class="ms-dot done"></div>
+                <div class="ms-line done"></div>
+              </div>
+              <div class="ms-body">
+                <div class="ms-title done">✓ UI Design System</div>
+                <div class="ms-sub">Feb 4 · KSh 2,
+                  000 released</div>
+              </div>
+            </div>
+            <div class="ms-row">
+              <div class="ms-col">
+                <div class="ms-dot done"></div>
+                <div class="ms-line done"></div>
+              </div>
+              <div class="ms-body">
+                <div class="ms-title done">✓ Backend API Setup</div>
+                <div class="ms-sub">Feb 11 · KSh 2,
+                  500 released</div>
+              </div>
+            </div>
+            <div class="ms-row">
+              <div class="ms-col">
+                <div class="ms-dot done"></div>
+                <div class="ms-line done"></div>
+              </div>
+              <div class="ms-body">
+                <div class="ms-title done">✓ Auth & User Flows</div>
+                <div class="ms-sub">Feb 15 · KSh 1,
+                  500 released</div>
+              </div>
+            </div>
+            <div class="ms-row">
+              <div class="ms-col">
+                <div class="ms-dot cur"></div>
+                <div class="ms-line"></div>
+              </div>
+              <div class="ms-body">
+                <div class="ms-title cur">→ Product Catalogue</div>
+                <div class="ms-sub">In progress · Due Mar 1 · KSh 2,
+                  000 held</div>
+              </div>
+            </div>
+            <div class="ms-row">
+              <div class="ms-col">
+                <div class="ms-dot locked"></div>
+                <div class="ms-line"></div>
+              </div>
+              <div class="ms-body">
+                <div class="ms-title locked">🔒 Checkout & Payments</div>
+                <div class="ms-sub">Locked · KSh 2,
+                  500 in escrow</div>
+              </div>
+            </div>
+            <div class="ms-row">
+              <div class="ms-col">
+                <div class="ms-dot locked"></div>
+              </div>
+              <div class="ms-body" style="padding-bottom:0">
+                <div class="ms-title locked">🔒 Launch & Deploy</div>
+                <div class="ms-sub">Locked · KSh 2,
+                  000 in escrow</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl fu d3">Escrow & Team</div>
+      <div class="g2 fu d3">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Escrow Breakdown</div><span class="card-lnk" onclick="showPage('escrow')">Full
+              History →</span>
+          </div>
+          <div class="ring-wrap">
+            <div class="ring-chart"><svg width="100" height="100" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="38" fill="none" stroke="var(--bg-hover)" stroke-width="10" />
+                <circle cx="50" cy="50" r="38" fill="none" stroke="var(--green)" stroke-width="10"
+                  stroke-dasharray="100 139" stroke-linecap="round" />
+                <circle cx="55" cy="50" r="38" fill="none" stroke="var(--text-1)" stroke-width="10"
+                  stroke-dasharray="70 169" stroke-dashoffset="-102" stroke-linecap="round" />
+                <circle cx="50" cy="50" r="38" fill="none" stroke="var(--amber)" stroke-width="10"
+                  stroke-dasharray="29 210" stroke-dashoffset="-174" stroke-linecap="round" />
+              </svg>
+              <div class="ring-center">
+                <div class="ring-val">KSh 22k</div>
+                <div class="ring-lbl">Total</div>
+              </div>
+            </div>
+            <div class="legend">
+              <div class="leg">
+                <div class="leg-dot" style="background:var(--green)"></div>
+                <div class="leg-lbl">Released</div>
+                <div class="leg-val">KSh 7,
+                  500</div>
+              </div>
+              <div class="leg">
+                <div class="leg-dot" style="background:var(--text-1)"></div>
+                <div class="leg-lbl">In Escrow</div>
+                <div class="leg-val">KSh 10,
+                  500</div>
+              </div>
+              <div class="leg">
+                <div class="leg-dot" style="background:var(--amber)"></div>
+                <div class="leg-lbl">Pending</div>
+                <div class="leg-val">KSh 4,
+                  000</div>
+              </div>
+            </div>
+          </div>
+          <div class="div"></div>
+          <div class="tx">
+            <div class="tx-ico" style="background:var(--gbg)">💸</div>
+            <div class="tx-info">
+              <div class="tx-name">Milestone 4 Released</div>
+              <div class="tx-date">Feb 15 · Auth & User Flows</div>
+            </div>
+            <div class="tx-amt" style="color:var(--green)">+KSh 1,
+              500</div>
+          </div>
+          <div class="tx">
+            <div class="tx-ico" style="background:var(--abg)">🔒</div>
+            <div class="tx-info">
+              <div class="tx-name">Milestone 5 Funded</div>
+              <div class="tx-date">Feb 12 · Product Catalogue</div>
+            </div>
+            <div class="tx-amt" style="color:var(--amber)">KSh 2,
+              000</div>
+          </div>
+          <div class="tx">
+            <div class="tx-ico" style="background:var(--bg-inset)">🏦</div>
+            <div class="tx-info">
+              <div class="tx-name">Project Fully Funded</div>
+              <div class="tx-date">Jan 22 · E-Commerce Platform</div>
+            </div>
+            <div class="tx-amt" style="color:var(--red)">−KSh 22,
+              000</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">Messages</div><span class="card-lnk" onclick="showPage('messages')">Open All
+                →</span>
+            </div>
+            <div id="dash-messages">
+              <div class="loading-text">Loading…</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">My Developers</div>
+            </div>
+            <div class="dev-row">
+              <div class="av" style="width:30px;height:30px;font-size:11px"><img
+                  src="https://api.dicebear.com/8.x/thumbs/svg?seed=DevPatel&backgroundColor=222222" alt=""
+                  onerror="this.style.display='none'">DP</div>
+              <div class="dev-info">
+                <div class="dev-name">Dev Patel</div>
+                <div class="dev-spec">Full-Stack · ★★★★★ 4.9</div>
+              </div>
+              <div class="online">● Online</div>
+            </div>
+            <div class="dev-row">
+              <div class="av" style="width:30px;height:30px;font-size:11px"><img
+                  src="https://api.dicebear.com/8.x/thumbs/svg?seed=SaraM&backgroundColor=222222" alt=""
+                  onerror="this.style.display='none'">SM</div>
+              <div class="dev-info">
+                <div class="dev-name">Sara M.</div>
+                <div class="dev-spec">UI/UX · ★★★★★ 4.8</div>
+              </div>
+              <div class="away">● Away</div>
+            </div>
+            <div class="dev-row">
+              <div class="av" style="width:30px;height:30px;font-size:11px"><img
+                  src="https://api.dicebear.com/8.x/thumbs/svg?seed=JamesD&backgroundColor=222222" alt=""
+                  onerror="this.style.display='none'">JD</div>
+              <div class="dev-info">
+                <div class="dev-name">James D.</div>
+                <div class="dev-spec">Marketing · ★★★★☆ 4.6</div>
+              </div>
+              <div class="offline">● Offline</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head" style="margin-bottom:9px">
+              <div class="card-title">Quick Actions</div>
+            </div>
+            <div class="g2b"><button class="qa">
+                <div class="qa-ico">✅</div>
+                <div class="qa-lbl">Approve</div>
+                <div class="qa-desc">Release milestone</div>
+              </button><button class="qa">
+                <div class="qa-ico">🚨</div>
+                <div class="qa-lbl">Dispute</div>
+                <div class="qa-desc">Flag an issue</div>
+              </button><button class="qa">
+                <div class="qa-ico">📄</div>
+                <div class="qa-lbl">Invoice</div>
+                <div class="qa-desc">Download PDF</div>
+              </button><button class="qa">
+                <div class="qa-ico">⭐</div>
+                <div class="qa-lbl">Review</div>
+                <div class="qa-desc">Rate developer</div>
+              </button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ═══ PAGE: MY PROJECTS ═══ -->
+    <div id="page-projects" class="page">
+      <div class="sl">All My Projects</div>
+      <div class="card fu d1">
+        <div class="card-head">
+          <div class="card-title">Active & Historical Projects</div><button class="btn btn-w btn-sm"
+            onclick="showModal('new-project')">+New Project</button>
+        </div>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Developer</th>
+              <th>Value</th>
+              <th>Progress</th>
+              <th>Due</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="projects-table-body">
+            <tr>
+              <td colspan="6" class="loading-text">Loading projects…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- ═══ PAGE: ESCROW FUNDS ═══ -->
+    <div id="page-escrow" class="page">
+      <div class="sl">Escrow Funds</div>
+      <div class="g4 fu d1">
+        <div class="sc">
+          <div class="sc-icon">🔒</div>
+          <div class="sc-val">KSh 10,
+            500</div>
+          <div class="sc-lbl">Currently Held</div>
+          <div class="sc-d neu">Across 3 projects</div>
+        </div>
+        <div class="sc">
+          <div class="sc-icon">💸</div>
+          <div class="sc-val">KSh 7,
+            500</div>
+          <div class="sc-lbl">Released</div>
+          <div class="sc-d up">▲ This month</div>
+        </div>
+        <div class="sc">
+          <div class="sc-icon">⏳</div>
+          <div class="sc-val">KSh 4,
+            000</div>
+          <div class="sc-lbl">Pending Release</div>
+          <div class="sc-d neu">Awaiting approval</div>
+        </div>
+        <div class="sc">
+          <div class="sc-icon">💰</div>
+          <div class="sc-val">KSh 22,
+            000</div>
+          <div class="sc-lbl">Total Committed</div>
+          <div class="sc-d neu">All-time</div>
+        </div>
+      </div>
+      <div class="card fu d2">
+        <div class="card-head">
+          <div class="card-title">Invoices & Payments</div>
+        </div>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="invoices-table-body">
+            <tr>
+              <td colspan="5" class="loading-text">Loading invoices…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- ═══ PAGE: MESSAGES ═══ -->
+    <div id="page-messages" class="page">
+      <div class="sl">Messages</div>
+      <div class="g2l fu d1">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Conversations</div>
+          </div>
+          <div id="messages-list">
+            <div class="loading-text">Loading messages…</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Select a conversation</div>
+          </div>
+          <div
+            style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:var(--text-5);font-size:13px;">
+            Click a message to open it</div>
+        </div>
+      </div>
+    </div>
+    <!-- ═══ PAGE: NOTIFICATIONS ═══ -->
+    <div id="page-notifications" class="page">
+      <div class="sl">Notifications</div>
+      <div class="card fu d1">
+        <div class="card-head">
+          <div class="card-title">All Notifications</div><button class="btn btn-g btn-sm">Mark All
+            Read</button>
+        </div>
+        <div class="notif">
+          <div class="notif-ico">📋</div>
+          <div class="notif-body">
+            <div class="notif-title">Milestone submitted for review</div>
+            <div class="notif-sub">Dev Patel submitted <strong>Product Catalogue (MS5)</strong></div>
+            <div class="notif-time">10 minutes ago</div>
+          </div><span class="badge b-b">New</span>
+        </div>
+        <div class="notif">
+          <div class="notif-ico">💸</div>
+          <div class="notif-body">
+            <div class="notif-title">Payment released successfully</div>
+            <div class="notif-sub">KSh 1,
+              500 released to Dev Patel for Auth & User Flows</div>
+            <div class="notif-time">Feb 15,
+              2:30 PM</div>
+          </div>
+        </div>
+        <div class="notif">
+          <div class="notif-ico">⭐</div>
+          <div class="notif-body">
+            <div class="notif-title">Review reminder</div>
+            <div class="notif-sub">Please rate your experience with Sara M. on Brand Identity</div>
+            <div class="notif-time">Feb 14,
+              9:00 AM</div>
+          </div><span class="badge b-a">Action</span>
+        </div>
+        <div class="notif">
+          <div class="notif-ico">🔒</div>
+          <div class="notif-body">
+            <div class="notif-title">Funds secured in escrow</div>
+            <div class="notif-sub">KSh 2,
+              000 secured for Product Catalogue milestone</div>
+            <div class="notif-time">Feb 12,
+              3:15 PM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ═══ PAGE: BILLING ═══ -->
+    <div id="page-billing" class="page">
+      <div class="sl">Billing & Payments</div>
+      <div class="g2 fu d1">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Current Plan</div>
+          </div>
+          <div class="plan-card">
+            <div class="plan-name">Client — Standard</div>
+            <div class="plan-price">KSh 0<span style="font-size:13px;font-weight:400;color:var(--text-5)">/month</span>
+            </div>
+            <div class="plan-sub">2.5% escrow fee per transaction</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-5);margin-bottom:12px;">Your next escrow fee:
+            <strong style="color:var(--text-2)">KSh 50</strong>on release of Milestone 5
+          </div><button class="btn btn-g" style="width:100%">Upgrade to Pro — 1.5% fee</button>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Payment Method</div><span class="card-lnk">Edit →</span>
+          </div>
+          <div
+            style="background:var(--bg-inset);border:1px solid var(--border-1);border-radius:var(--r12);padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <div style="font-size:22px;">💳</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-1)">Visa ending in 4242</div>
+              <div style="font-size:11px;color:var(--text-5)">Expires 09/2027</div>
+            </div><span class="badge b-g" style="margin-left:auto">Active</span>
+          </div><button class="btn btn-g" style="width:100%">+Add Payment Method</button>
+        </div>
+      </div>
+    </div>
+    <!-- ═══ PAGE: PROFILE ═══ -->
+    <div id="page-profile" class="page">
+      <div class="sl">Profile Settings</div>
+      <div class="g2l fu d1">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Personal Information</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div style="position:relative;cursor:pointer;" onclick="document.getElementById('av-upload').click()">
+              <div class="av"
+                style="width:60px;height:60px;font-size:20px;border-radius:var(--r12);border:1px solid var(--border-2);"
+                id="profile-av"><img id="profile-av-img"
+                  src="https://api.dicebear.com/8.x/thumbs/svg?seed=RyanNguyen&backgroundColor=222222" alt=""
+                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--r12);"
+                  onerror="this.style.display='none'"><span id="profile-initials">RN</span></div>
+              <div
+                style="position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;background:var(--text-1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;">
+                📷</div>
+            </div><input type="file" id="av-upload" accept="image/*" style="display:none"
+              onchange="handleAvatarUpload(event)">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-1)">Profile Photo</div>
+              <div style="font-size:11px;color:var(--text-5);margin-top:2px">JPG,
+                PNG or GIF · Max 5MB</div><button class="btn btn-g btn-sm" style="margin-top:7px"
+                onclick="document.getElementById('av-upload').click()">Upload Photo</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div><label class="input-lbl">First Name</label><input class="input" id="f-fname" value="Ryan"></div>
+            <div><label class="input-lbl">Last Name</label><input class="input" id="f-lname" value="Nguyen"></div>
+          </div>
+          <div style="margin-bottom:10px;"><label class="input-lbl">Email Address</label><input class="input"
+              id="f-email" value="ryan@email.com" type="email"></div>
+          <div style="margin-bottom:10px;"><label class="input-lbl">Phone Number</label><input class="input"
+              id="f-phone" value="+1 555 0192" type="tel"></div>
+          <div style="margin-bottom:18px;"><label class="input-lbl">Company / Business
+              Name</label><input class="input" id="f-company" value="Ryan Nguyen LLC" type="text">
+          </div><button class="btn btn-w" onclick="saveProfile()" style="width:100%">Save
+            Changes</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">Account Security</div>
+            </div>
+            <div style="margin-bottom:10px;"><label class="input-lbl">Current Password</label><input class="input"
+                type="password" placeholder="••••••••"></div>
+            <div style="margin-bottom:10px;"><label class="input-lbl">New Password</label><input class="input"
+                type="password" placeholder="New password"></div>
+            <div style="margin-bottom:14px;"><label class="input-lbl">Confirm Password</label><input class="input"
+                type="password" placeholder="Confirm new password"></div><button class="btn btn-g"
+              style="width:100%">Update Password</button>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">Supabase Status</div>
+            </div>
+            <div id="profile-sb-status" style="font-size:12px;color:var(--text-5)">Checking
+              connection…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <!-- ══════════════════════════════════════════════ SUPABASE+APP LOGIC
+        ══════════════════════════════════════════════ -->
+  <script type="module">
+    let CURRENT_USER = null;
+
+    async function initSupabase() {
+      if (!window.sbClient) {
+        console.warn("Supabase client not found. Retrying...");
+        setTimeout(initSupabase, 500);
+        return;
+      }
+
+      const { data: { user }, error: authErr } = await window.sbClient.auth.getUser();
+      if (authErr || !user) {
+        if (window._L) _L.warn("No active Supabase session, using mock data for demonstration.");
+        // Use a dummy user object for mock data display
+        CURRENT_USER = { id: 'dummy-client-id', email: 'mock-client@example.com' };
+        document.getElementById('sb-name').textContent = "Test Client";
+        await loadData();
+        if (window.hideLoader) hideLoader();
+        return;
+      }
+
+      CURRENT_USER = user;
+
+      // Load Profile
+      const { data: profile } = await window.sbClient.from('profiles').select('*').eq('id', user.id).single();
+      if (profile) {
+        const fname = profile.first_name || '';
+        const lname = profile.last_name || '';
+        const fullName = `${fname} ${lname}`.trim() || user.email;
+        document.getElementById('sb-name').textContent = fullName;
+
+        const titleEl = document.getElementById('topbar-title');
+        if (titleEl) {
+          titleEl.innerHTML = `Welcome back, ${fname || 'Client'} <span class="wave">👋</span>`;
+        }
+
+        if (fname || lname) {
+          const initials = (fname[0] || '') + (lname[0] || '');
+          document.getElementById('sb-initials').textContent = initials.toUpperCase();
+        }
+
+        if (profile.avatar_url) {
+          const img = document.getElementById('sb-av-img');
+          if (img) {
+            img.src = profile.avatar_url;
+            img.style.display = 'block';
+            document.getElementById('sb-initials').style.display = 'none';
+          }
+        }
+
+        // populate profile form if on that page
+        if (document.getElementById('f-fname')) document.getElementById('f-fname').value = fname;
+        if (document.getElementById('f-lname')) document.getElementById('f-lname').value = lname;
+        if (document.getElementById('f-email')) document.getElementById('f-email').value = profile.email || user.email;
+        if (document.getElementById('f-phone')) document.getElementById('f-phone').value = profile.phone || '';
+        if (document.getElementById('f-company')) document.getElementById('f-company').value = profile.company || '';
+      }
+
+      await loadData();
+      if (window.hideLoader) hideLoader();
+    }
+
+    async function loadData() {
+      if (!window.sbClient || !CURRENT_USER) {
+        if (window._L) _L.debug("loadData aborted: Supabase client or user missing.");
+        return;
+      }
+      const sb = window.sbClient;
+      if (window._L) _L.info("Loading client dashboard data...");
+
+      // 1. Fetch User's Projects
+      const { data: projects, error: pErr } = await sb.from('projects')
+        .select(`*, developer:developer_id(first_name, last_name, email)`)
+        .eq('client_id', CURRENT_USER.id)
+        .order('created_at', { ascending: false });
+
+      if (pErr) console.error("Error fetching projects:", pErr);
+
+      // 2. Fetch User's Invoices
+      const { data: invoices, error: iErr } = await sb.from('invoices')
+        .select(`*`)
+        .eq('client_email', CURRENT_USER.email)
+        .order('created_at', { ascending: false });
+
+      if (iErr) console.error("Error fetching invoices:", iErr);
+
+      // Render Projects
+      let activeCount = 0;
+      let projHtml = '';
+      if (projects && projects.length > 0) {
+        activeCount = projects.filter(p => p.status === 'in-progress' || p.status === 'active').length;
+        projHtml = projects.slice(0, 3).map(p => {
+          const devName = p.developer ? `${p.developer.first_name || ''} ${p.developer.last_name || ''}`.trim() : 'Unassigned';
+          return `
+              <div class="proj-row" style="padding: 12px; border-bottom: 1px solid var(--border-1);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                  <div style="font-weight:600; color:var(--text-1); font-size:13px;">${p.title}</div>
+                  <div style="font-family:'DM Mono', monospace; font-size:12px; color:var(--text-2);">${Number(p.budget || 0).toLocaleString()} KES</div>
+                </div>
+                <div style="font-size:11px; color:var(--text-4);">
+                  Developer: ${devName} • Status: <span style="text-transform:capitalize;">${p.status}</span>
+                </div>
+              </div>`;
+        }).join('');
+      } else {
+        projHtml = `<div class="loading-text" style="padding:20px; text-align:center; color:var(--text-5);">${pErr ? 'Error' : 'No projects'}</div>`;
+      }
+
+      if (document.getElementById('dash-projects')) document.getElementById('dash-projects').innerHTML = projHtml;
+      if (document.getElementById('s-proj')) document.getElementById('s-proj').textContent = activeCount;
+
+      const tbBody = document.getElementById('projects-table-body');
+      if (tbBody && projects) {
+        tbBody.innerHTML = projects.map(p => {
+          const devName = p.developer ? `${p.developer.first_name || ''} ${p.developer.last_name || ''}`.trim() : 'Unassigned';
+          const statusClass = (p.status === 'active' || p.status === 'in-progress') ? 'b-g' : (p.status === 'review' ? 'b-b' : 'b-w');
+          return `
+              <tr>
+                <td>
+                  <div style="font-weight:600; color:var(--text-1);">${p.title}</div>
+                  <div style="font-size:10px; color:var(--text-5);">ID: ${p.id.slice(0, 8)}</div>
+                </td>
+                <td style="font-size:13px;">${devName}</td>
+                <td style="font-family:'DM Mono', monospace; font-size:13px;">${Number(p.budget || 0).toLocaleString()} KES</td>
+                <td style="font-size:11px; color:var(--text-4);">${p.due_date ? new Date(p.due_date).toLocaleDateString() : 'TBD'}</td>
+                <td>
+                  <div class="pbg" style="width:60px;"><div class="pf pf-g" style="width:${p.progress || 0}%"></div></div>
+                </td>
+                <td><span class="badge ${statusClass}">${p.status}</span></td>
+              </tr>`;
+        }).join('');
+      }
+
+      // Render Invoices
+      const invBody = document.getElementById('invoices-table-body');
+      if (invBody) {
+        if (!invoices || invoices.length === 0) {
+          invBody.innerHTML = `<tr><td colspan="5" class="loading-text">No invoices found.</td></tr>`;
+        } else {
+          invBody.innerHTML = invoices.map(inv => {
+            const statusClass = inv.status === 'paid' ? 'b-g' : (inv.status === 'sent' ? 'b-b' : 'b-a');
+            const payBtn = (inv.status === 'sent' && inv.paystack_authorization_url)
+              ? `<a href="${inv.paystack_authorization_url}" target="_blank" class="btn btn-w btn-xs">Pay Now</a>`
+              : '';
+            return `
+                <tr>
+                  <td>
+                    <div style="font-weight:600; color:var(--text-1);">#${inv.id.slice(-6).toUpperCase()}</div>
+                    <div style="font-size:10px; color:var(--text-5);">${new Date(inv.created_at).toLocaleDateString()}</div>
+                  </td>
+                  <td style="font-size:13px;">${inv.description}</td>
+                  <td style="font-family:'DM Mono', monospace; font-size:13px;">${Number(inv.amount || 0).toLocaleString()} KES</td>
+                  <td><span class="badge ${statusClass}">${inv.status}</span></td>
+                  <td>${payBtn}</td>
+                </tr>`;
+          }).join('');
+        }
+      }
+
+      if (invoices) {
+        const totalPaid = invoices.filter(i => i.status === 'paid').reduce((acc, i) => acc + (i.amount || 0), 0);
+        const escrowEl = document.getElementById('s-escrow');
+        if (escrowEl) escrowEl.textContent = `KSh ${totalPaid.toLocaleString()}`;
+      }
+    }
+
+    // Page Navigation
+    window.showPage = function (page) {
+      const titles = {
+        dashboard: ['Welcome back 👋', 'Here\'s your project summary'],
+        projects: ['My Projects', 'Manage your active projects'],
+        escrow: ['Escrow Funds', 'Secured project payments'],
+        messages: ['Messages', 'Your project communication'],
+        notifications: ['Notifications', 'Stay updated on progress'],
+        billing: ['Billing & Invoices', 'Pay and manage project funds'],
+        profile: ['Profile Settings', 'Update your details'],
+      };
+
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+
+      const pg = document.getElementById('page-' + page);
+      if (pg) pg.classList.add('active');
+
+      const navEl = document.querySelector(`.ni[data-page="${page}"]`);
+      if (navEl) navEl.classList.add('active');
+
+      const t = titles[page] || [page, ''];
+      document.getElementById('topbar-title').textContent = t[0];
+      document.getElementById('topbar-sub').textContent = t[1];
+    }
+
+    // Theme toggle
+    window.toggleTheme = function () {
+      const h = document.documentElement;
+      const current = h.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      h.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+
+      const sw = document.getElementById('theme-sw');
+      const lbl = document.getElementById('theme-lbl');
+      if (sw) sw.classList.toggle('on', next === 'light');
+      if (lbl) lbl.textContent = next === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode';
+    }
+
+    // Profile management
+    window.saveProfile = async function () {
+      if (!window.sbClient || !CURRENT_USER) return;
+      const data = {
+        first_name: document.getElementById('f-fname')?.value,
+        last_name: document.getElementById('f-lname')?.value,
+        phone: document.getElementById('f-phone')?.value,
+        company: document.getElementById('f-company')?.value,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await window.sbClient.from('profiles').update(data).eq('id', CURRENT_USER.id);
+      if (error) { toast('Error saving profile'); console.error(error); }
+      else { toast('Profile updated ✓'); }
+    }
+
+    window.toast = msg => window.showToast ? window.showToast(msg) : alert(msg);
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      initSupabase();
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const sw = document.getElementById('theme-sw');
+      const lbl = document.getElementById('theme-lbl');
+      if (sw) sw.classList.toggle('on', savedTheme === 'light');
+      if (lbl) lbl.textContent = savedTheme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode';
+    });
+
+    // Sidebar Toggle
+    (function () {
+      function toggleSidebar() {
+        if (window.innerWidth <= 900) {
+          document.querySelector('.sidebar').classList.toggle('mob-open');
+          document.getElementById('sb-backdrop')?.classList.toggle('open');
+        } else {
+          document.body.classList.toggle('sb-collapsed');
+        }
+      }
+      window.injectToggle = function () {
+        const topbar = document.querySelector('.topbar');
+        if (!topbar || document.getElementById('sb-toggle-btn')) return;
+        const btn = document.createElement('button');
+        btn.id = 'sb-toggle-btn'; btn.className = 'sb-toggle';
+        btn.innerHTML = '<span class="sb-toggle-bar"></span><span class="sb-toggle-bar"></span><span class="sb-toggle-bar"></span>';
+        btn.onclick = toggleSidebar;
+        topbar.insertBefore(btn, topbar.firstChild);
+      }
+      document.addEventListener('DOMContentLoaded', injectToggle);
+    })();
+  </script>
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>document.querySelectorAll('.card, .sc, .dash-hdr').forEach((el, i) => {
+      if (!el.hasAttribute('data-aos')) {
+        el.setAttribute('data-aos', 'fade-up');
+        el.setAttribute('data-aos-delay', Math.min(i * 50, 400).toString());
+      }
+    });
+
+    AOS.init({
+      duration: 800, once: true
+    });
+  </script>
+</body>
+
+</html>
